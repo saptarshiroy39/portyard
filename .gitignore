@@ -143,8 +143,6 @@ next-env.d.ts
 *.db
 *.sqlite
 *.sqlite3
-data/
-state/
 qdrant_storage/
 
 # Jupyter Notebooks

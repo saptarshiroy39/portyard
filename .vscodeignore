@@ -24,3 +24,4 @@ pnpm-workspace.yaml
 CHANGELOG.md
 *.vsix
 scripts/**
+*.tsbuildinfo

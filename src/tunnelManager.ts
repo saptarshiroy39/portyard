@@ -1,6 +1,6 @@
 import { ChildProcess, spawn } from "child_process";
 import * as vscode from "vscode";
-import { ActivePort, killProcess } from "./portDiscovery";
+import { ActivePort } from "./portDiscovery";
 import { ActivePortsProvider } from "./portTreeProvider";
 
 export interface Tunnel {
@@ -15,15 +15,7 @@ export function closeActiveTunnel(port: number, portsProvider?: ActivePortsProvi
   if (tunnel) {
     activeTunnels.delete(port);
     try {
-      if (tunnel.process.pid) {
-        killProcess(tunnel.process.pid).catch(() => {
-          try {
-            tunnel.process.kill("SIGKILL");
-          } catch {}
-        });
-      } else {
-        tunnel.process.kill();
-      }
+      tunnel.process.kill("SIGKILL");
     } catch {}
     if (portsProvider) {
       portsProvider.refresh();
@@ -90,8 +82,8 @@ export function createSshTunnel(
           }
 
           const match =
-            outputBuffer.match(/(https:\/\/[a-zA-Z0-9-.]+\.lhr\.life)/i) ||
-            outputBuffer.match(/(https:\/\/[a-zA-Z0-9-.]+\.localhost\.run)/i);
+            outputBuffer.match(/(https:\/\/[a-zA-Z0-9.-]+\.lhr\.life)/i) ||
+            outputBuffer.match(/(https:\/\/[a-zA-Z0-9.-]+\.localhost\.run)/i);
 
           if (match && match[1]) {
             const url = match[1];
@@ -130,9 +122,13 @@ export function createSshTunnel(
         proc.stderr?.setEncoding("utf8");
         proc.stderr?.on("data", handleData);
 
-        proc.on("close", (code) => {
+        const cleanup = () => {
           activeTunnels.delete(port);
           portsProvider.refresh();
+        };
+
+        proc.on("close", (code) => {
+          cleanup();
           if (!urlFound && !isCancelled) {
             const lastLine = outputBuffer.trim().split("\n").pop()?.trim();
             const reason = lastLine ? `: ${lastLine}` : ` (exit code ${code})`;
@@ -144,8 +140,7 @@ export function createSshTunnel(
         });
 
         proc.on("error", (err) => {
-          activeTunnels.delete(port);
-          portsProvider.refresh();
+          cleanup();
           if (!urlFound && !isCancelled) {
             vscode.window.showErrorMessage(
               `SSH Tunnel failed to launch: ${err.message}. Ensure OpenSSH client is installed and in your PATH.`,
