@@ -5,6 +5,18 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-10-25
+
+### Changed
+
+- **Unified Port Iconography:** Standardized active port tree items to use the `plug` Codicon across all stacks while preserving technology theme colors (`charts.yellow`, `charts.blue`, `charts.green`, `charts.purple`).
+- **Search Prompt Usability:** Streamlined the active ports search input to display VS Code's clean native confirmation text without duplication.
+- **Process Scanner Optimization:** Optimized background process table lookups with direct PID-to-process mapping for lower memory overhead and faster scans.
+
+### Fixed
+
+- **Tunnel Process Cleanup:** Improved SSH tunnel termination to shut down background processes cleanly via native signals.
+
 ## [1.4.0] - 2026-10-03
 
 ### Added

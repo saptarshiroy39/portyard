@@ -15,13 +15,7 @@ export class PortTreeItem extends vscode.TreeItem {
     super(`:${portInfo.port}`, vscode.TreeItemCollapsibleState.None);
 
     this.description = `${portInfo.processName} (#${portInfo.pid})`;
-
-    if (tunnelInfo) {
-      this.contextValue = "sharedPort";
-    } else {
-      this.contextValue = "activePort";
-    }
-
+    this.contextValue = tunnelInfo ? "sharedPort" : "activePort";
     this.tooltip = this.getTooltipText();
     this.iconPath = this.getIcon();
   }
@@ -47,7 +41,7 @@ export class PortTreeItem extends vscode.TreeItem {
   }
 
   private getIcon(): vscode.ThemeIcon {
-    const iconName = getBrandIcon(this.portInfo.brand, !!this.tunnelInfo);
+    const iconName = getBrandIcon(!!this.tunnelInfo);
     return new vscode.ThemeIcon(
       iconName,
       new vscode.ThemeColor(getBrandColor(this.portInfo.brand)),

@@ -2,7 +2,7 @@
   "name": "portyard",
   "displayName": "Portyard",
   "description": "Cross-platform local port discovery and process management.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "publisher": "saptarshiroy39",
   "license": "MIT",
   "homepage": "https://hirishi.in",
@@ -18,7 +18,6 @@
     "Other",
     "Visualization"
   ],
-  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {

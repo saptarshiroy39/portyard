@@ -35,7 +35,7 @@
 | **Dedicated View** | Dedicated Portyard Activity Bar panel for instant access to open ports |
 | **Active Port Scan** | Automatically scans active listening ports with their process names & PIDs (`#<pid>`) |
 | **Smart Polling** | Visibility-aware background scanning that automatically pauses when panel is hidden |
-| **Tech Brand Recognition** | Detects 15+ stacks (React, Vue, Vite, Node, Bun, Django, FastAPI, Postgres, Redis, etc.) with theme colors & Codicons |
+| **Tech Brand Recognition** | Detects 15+ stacks (React, Vue, Vite, Node, Bun, Django, FastAPI, Postgres, Redis, etc.) with theme colors & plug icons |
 | **Persistent SSH Tunnels** | Generates instant, public forwarding URLs (`localhost.run`) with keepalives that survive hot-reloads |
 | **System Port Filter** | Toggle system and ephemeral ports on/off using the eye filter icon |
 | **Process Control** | One-click process termination with safety confirmation to free up socket ports |
@@ -51,7 +51,7 @@
 | 2️⃣ | **Ports Provider** | Sidebar TreeDataProvider, process item rendering, Markdown tooltips | **_TypeScript_** |
 | 3️⃣ | **Port Discovery** | Cross-platform socket scanner (`netstat`, `lsof`), process cache mapping, process killer | **_TypeScript_** |
 | 4️⃣ | **Tunnel Manager** | Resilient OpenSSH reverse forwarding runner with chunk buffering & keepalives | **_TypeScript_** |
-| 5️⃣ | **Brand Classifier** | Tech stack categorization mapping to VS Code Codicons & chart theme colors | **_TypeScript_** |
+| 5️⃣ | **Brand Classifier** | Tech stack categorization mapping to theme colors & status icons | **_TypeScript_** |
 
 ---
 

@@ -11,7 +11,6 @@ export function activate(context: vscode.ExtensionContext) {
   const portsProvider = new ActivePortsProvider((port) =>
     activeTunnels.get(port),
   );
-  portsProvider.showSystemPorts = false;
   vscode.commands.executeCommand(
     "setContext",
     "portyard:showSystemPorts",
@@ -94,8 +93,6 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       const query = await vscode.window.showInputBox({
         title: "Search Active Ports",
-        prompt:
-          "Filter by port number, process name, PID, or technology (leave empty to clear)",
         placeHolder: "e.g. 10010, nvcontainer, 8204, vite",
         value: portsProvider.searchQuery,
       });
