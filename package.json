@@ -1,0 +1,128 @@
+{
+    "name": "portyard",
+    "displayName": "Portyard",
+    "description": "Cross-platform local port discovery and process management.",
+    "version": "1.0.0",
+    "publisher": "saptarshiroy39",
+    "license": "MIT",
+    "homepage": "https://hirishi.in",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/saptarshiroy39/Portyard.git"
+    },
+    "icon": "images/logo.png",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Other",
+        "Visualization"
+    ],
+    "activationEvents": [],
+    "main": "./out/extension.js",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "portyard-sidebar",
+                    "title": "Portyard",
+                    "icon": "images/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "portyard-sidebar": [
+                {
+                    "id": "portyard-ports-view",
+                    "name": "Active Ports",
+                    "type": "tree"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "portyard.refreshPorts",
+                "title": "Refresh Ports List",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "portyard.killPortProcess",
+                "title": "Stop Process",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "portyard.openInBrowser",
+                "title": "Open in Browser",
+                "icon": "$(globe)"
+            },
+            {
+                "command": "portyard.forwardPort",
+                "title": "Forward Port",
+                "icon": "$(share)"
+            },
+            {
+                "command": "portyard.showSystem",
+                "title": "Show System Ports",
+                "icon": "$(eye)"
+            },
+            {
+                "command": "portyard.hideSystem",
+                "title": "Hide System & Ephemeral Ports",
+                "icon": "$(eye-closed)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "portyard.refreshPorts",
+                    "when": "view == portyard-ports-view",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "portyard.showSystem",
+                    "when": "view == portyard-ports-view && !portyard:showSystemPorts",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "portyard.hideSystem",
+                    "when": "view == portyard-ports-view && portyard:showSystemPorts",
+                    "group": "navigation@2"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "portyard.openInBrowser",
+                    "when": "view == portyard-ports-view && viewItem == activePort",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "portyard.forwardPort",
+                    "when": "view == portyard-ports-view && viewItem == activePort",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "portyard.killPortProcess",
+                    "when": "view == portyard-ports-view && viewItem == activePort",
+                    "group": "inline@3"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "pnpm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint",
+        "typecheck": "tsc --noEmit",
+        "format": "prettier --write ."
+    },
+    "devDependencies": {
+        "@types/node": "^18.17.0",
+        "@types/vscode": "^1.80.0",
+        "@typescript-eslint/eslint-plugin": "^8.60.0",
+        "@typescript-eslint/parser": "^8.60.0",
+        "eslint": "^10.4.0",
+        "prettier": "^3.8.3",
+        "typescript": "^5.1.6"
+    }
+}

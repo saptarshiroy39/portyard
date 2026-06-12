@@ -1,0 +1,299 @@
+import * as vscode from 'vscode';
+import { ActivePortsProvider, PortTreeItem } from './portTreeProvider';
+import { killProcess } from './portDiscovery';
+import { getBrandColor } from './brandUtils';
+import { exec, ChildProcess } from 'child_process';
+
+const activeTunnels: Map<number, { process: ChildProcess; url: string }> =
+    new Map();
+
+export function activate(context: vscode.ExtensionContext) {
+    const portsProvider = new ActivePortsProvider();
+    portsProvider.showSystemPorts = false;
+    vscode.commands.executeCommand(
+        'setContext',
+        'portyard:showSystemPorts',
+        false,
+    );
+
+    vscode.window.registerTreeDataProvider(
+        'portyard-ports-view',
+        portsProvider,
+    );
+
+    // Auto-refresh active ports every 30 seconds
+    const autoRefreshInterval = setInterval(() => {
+        portsProvider.refresh();
+    }, 30000);
+
+    context.subscriptions.push(
+        new vscode.Disposable(() => {
+            clearInterval(autoRefreshInterval);
+        })
+    );
+
+    const refreshCommand = vscode.commands.registerCommand(
+        'portyard.refreshPorts',
+        () => {
+            portsProvider.refresh();
+        },
+    );
+
+    const showSystemCommand = vscode.commands.registerCommand(
+        'portyard.showSystem',
+        () => {
+            portsProvider.showSystemPorts = true;
+            vscode.commands.executeCommand(
+                'setContext',
+                'portyard:showSystemPorts',
+                true,
+            );
+            portsProvider.refresh();
+        },
+    );
+
+    const hideSystemCommand = vscode.commands.registerCommand(
+        'portyard.hideSystem',
+        () => {
+            portsProvider.showSystemPorts = false;
+            vscode.commands.executeCommand(
+                'setContext',
+                'portyard:showSystemPorts',
+                false,
+            );
+            portsProvider.refresh();
+        },
+    );
+
+    const killCommand = vscode.commands.registerCommand(
+        'portyard.killPortProcess',
+        async (item: PortTreeItem) => {
+            if (!item || !item.portInfo) return;
+
+            const confirm = await vscode.window.showWarningMessage(
+                `Are you sure you want to stop the process "${item.portInfo.processName}" (PID: ${item.portInfo.pid}) running on port ${item.portInfo.port}?`,
+                { modal: true },
+                'Stop Process',
+            );
+            if (confirm !== 'Stop Process') return;
+
+            await vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: `Stopping process running on port ${item.portInfo.port}...`,
+                    cancellable: false,
+                },
+                async () => {
+                    try {
+                        await killProcess(item.portInfo.pid);
+                        closeActiveTunnel(item.portInfo.port);
+                        vscode.window.showInformationMessage(
+                            `Successfully stopped process running on port ${item.portInfo.port}.`,
+                        );
+                        portsProvider.refresh();
+                    } catch (error: any) {
+                        vscode.window.showErrorMessage(
+                            `Failed to stop process. You may need administrator privileges to terminate this process. Error: ${error.message}`,
+                        );
+                    }
+                },
+            );
+        },
+    );
+
+    const openCommand = vscode.commands.registerCommand(
+        'portyard.openInBrowser',
+        async (item: PortTreeItem) => {
+            if (!item || !item.portInfo) return;
+            const uri = vscode.Uri.parse(
+                `http://localhost:${item.portInfo.port}`,
+            );
+            try {
+                await vscode.env.openExternal(uri);
+            } catch (error: any) {
+                vscode.window.showErrorMessage(
+                    `Failed to open browser: ${error.message}`,
+                );
+            }
+        },
+    );
+
+    const forwardCommand = vscode.commands.registerCommand(
+        'portyard.forwardPort',
+        async (item: PortTreeItem) => {
+            if (!item || !item.portInfo) return;
+
+            const port = item.portInfo.port;
+            const activeTunnel = activeTunnels.get(port);
+
+            if (activeTunnel) {
+                const selection = await vscode.window.showQuickPick(
+                    [
+                        {
+                            label: '$(copy) Copy Public URL to Clipboard',
+                            description: activeTunnel.url,
+                            action: 'copy',
+                        },
+                        {
+                            label: '$(globe) Open Public URL in Browser',
+                            description: activeTunnel.url,
+                            action: 'open',
+                        },
+                        {
+                            label: '$(circle-slash) Terminate SSH Tunnel',
+                            description:
+                                'Stops the running localhost.run forwarding tunnel.',
+                            action: 'stop',
+                        },
+                    ],
+                    {
+                        placeHolder: `SSH Tunnel for port ${port} is active`,
+                    },
+                );
+
+                if (!selection) return;
+
+                if (selection.action === 'copy') {
+                    vscode.env.clipboard.writeText(activeTunnel.url);
+                    vscode.window.showInformationMessage(
+                        `Copied tunnel URL to clipboard: ${activeTunnel.url}`,
+                    );
+                } else if (selection.action === 'open') {
+                    vscode.env.openExternal(vscode.Uri.parse(activeTunnel.url));
+                } else if (selection.action === 'stop') {
+                    closeActiveTunnel(port);
+                    vscode.window.showInformationMessage(
+                        `SSH tunnel for port ${port} has been terminated.`,
+                    );
+                }
+                return;
+            }
+            createSshTunnel(port);
+        },
+    );
+
+    context.subscriptions.push(
+        refreshCommand,
+        showSystemCommand,
+        hideSystemCommand,
+        killCommand,
+        openCommand,
+        forwardCommand,
+        vscode.window.registerFileDecorationProvider(
+            new PortFileDecorationProvider(),
+        ),
+    );
+}
+
+function closeActiveTunnel(port: number) {
+    const tunnel = activeTunnels.get(port);
+    if (tunnel) {
+        tunnel.process.kill();
+        activeTunnels.delete(port);
+    }
+}
+
+function createSshTunnel(port: number): Thenable<void> {
+    return vscode.window.withProgress(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: `Generating instant SSH tunnel for port ${port}...`,
+            cancellable: true,
+        },
+        (_progress, token) => {
+            return new Promise<void>((resolve) => {
+                let isCancelled = false;
+                token.onCancellationRequested(() => {
+                    isCancelled = true;
+                    closeActiveTunnel(port);
+                    resolve();
+                });
+
+                closeActiveTunnel(port);
+
+                const proc = exec(
+                    `ssh -o StrictHostKeyChecking=accept-new -R 80:127.0.0.1:${port} nokey@localhost.run`,
+                );
+
+                let urlFound = false;
+
+                proc.stdout?.on('data', (data: string) => {
+                    if (urlFound || isCancelled) return;
+
+                    const match =
+                        data.match(/(https:\/\/[a-zA-Z0-9-.]+\.lhr\.life)/i) ||
+                        data.match(
+                            /(https:\/\/[a-zA-Z0-9-.]+\.localhost\.run)/i,
+                        ) ||
+                        data.match(/(https:\/\/[^\s]+)/);
+
+                    if (match && match[1]) {
+                        urlFound = true;
+                        const url = match[1];
+
+                        activeTunnels.set(port, { process: proc, url });
+                        vscode.env.clipboard.writeText(url);
+
+                        vscode.window
+                            .showInformationMessage(
+                                `SSH Tunnel Active! Link copied: ${url}`,
+                                'Open in Browser',
+                                'Close Tunnel',
+                            )
+                            .then((choice) => {
+                                if (choice === 'Open in Browser') {
+                                    vscode.env.openExternal(
+                                        vscode.Uri.parse(url),
+                                    );
+                                } else if (choice === 'Close Tunnel') {
+                                    closeActiveTunnel(port);
+                                    vscode.window.showInformationMessage(
+                                        `SSH tunnel for port ${port} terminated.`,
+                                    );
+                                }
+                            });
+
+                        resolve();
+                    }
+                });
+
+                proc.on('close', () => {
+                    activeTunnels.delete(port);
+                    resolve();
+                });
+
+                proc.on('error', (err) => {
+                    activeTunnels.delete(port);
+                    if (!urlFound && !isCancelled) {
+                        vscode.window.showErrorMessage(
+                            `SSH Tunnel failed to launch: ${err.message}`,
+                        );
+                        resolve();
+                    }
+                });
+            });
+        },
+    );
+}
+
+export function deactivate() {
+    for (const tunnel of activeTunnels.values()) {
+        tunnel.process.kill();
+    }
+    activeTunnels.clear();
+}
+
+class PortFileDecorationProvider implements vscode.FileDecorationProvider {
+    provideFileDecoration(
+        uri: vscode.Uri,
+    ): vscode.ProviderResult<vscode.FileDecoration> {
+        if (uri.scheme !== 'portyard-port') {
+            return undefined;
+        }
+        const match = uri.query.match(/brand=([^&]+)/);
+        const brand = match ? match[1] : undefined;
+        return {
+            color: new vscode.ThemeColor(getBrandColor(brand)),
+        };
+    }
+}
