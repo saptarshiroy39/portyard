@@ -5,6 +5,14 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-23
+
+### Added
+
+- **Visual Sharing State:** Port items are now decorated with a brand-colored `broadcast` icon when actively shared/forwarded.
+- **One-Click Unsharing:** Added a direct `Stop Forwarding` (circle-slash) inline button on shared port tree items to terminate tunnels with one click.
+- **Inline Sharing Utilities:** Added inline actions to quickly `Copy Public URL` and `Open in Browser` for shared ports directly from the sidebar.
+
 ## [1.0.0] - 2026-06-12
 
 ### Added
