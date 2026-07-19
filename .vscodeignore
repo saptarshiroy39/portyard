@@ -10,7 +10,7 @@ src/**
 esbuild.js
 vsc-extension-quickstart.md
 **/tsconfig.json
-**/eslint.config.mjs
+**/eslint.config.*
 **/*.map
 **/*.ts
 **/.vscode-test.*
