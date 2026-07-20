@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ActivePortsProvider, PortTreeItem } from "./portTreeProvider";
 import { killProcess } from "./portDiscovery";
 import { getBrandColor } from "./brandUtils";
-import { exec, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 
 const activeTunnels: Map<number, { process: ChildProcess; url: string }> =
   new Map();
@@ -20,10 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.window.registerTreeDataProvider("portyard-ports-view", portsProvider);
 
-  // Auto-refresh active ports every 30 seconds
   const autoRefreshInterval = setInterval(() => {
     portsProvider.refresh();
-  }, 30000);
+  }, 5000);
 
   context.subscriptions.push(
     new vscode.Disposable(() => {
@@ -255,12 +254,17 @@ function createSshTunnel(
 
         closeActiveTunnel(port, portsProvider);
 
-        const proc = exec(
-          `ssh -o StrictHostKeyChecking=accept-new -R 80:127.0.0.1:${port} nokey@localhost.run`,
-        );
+        const proc = spawn("ssh", [
+          "-o",
+          "StrictHostKeyChecking=accept-new",
+          "-R",
+          `80:127.0.0.1:${port}`,
+          "nokey@localhost.run",
+        ]);
 
         let urlFound = false;
 
+        proc.stdout?.setEncoding("utf8");
         proc.stdout?.on("data", (data: string) => {
           if (urlFound || isCancelled) return;
 

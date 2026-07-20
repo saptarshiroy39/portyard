@@ -5,6 +5,16 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-06-25
+
+### Changed
+
+- **Optimized Auto-Refresh Rate:** Adjusted the auto-refresh interval of active ports list to 5 seconds (previously 30 seconds) for faster UI synchronization.
+
+### Fixed
+
+- **Orphaned SSH Forwarding Tunnels:** Switched the runner from `child_process.exec` to `child_process.spawn` for the SSH forwarder. This ensures the underlying SSH process is completely killed when stopping port forwarding, preventing public URL exposure from persisting.
+
 ## [1.1.0] - 2026-06-23
 
 ### Added
