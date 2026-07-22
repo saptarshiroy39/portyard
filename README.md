@@ -20,14 +20,16 @@
 
 ## 🎯 _Features_
 
-| FEATURE               | DESCRIPTION                                                                     |
-| --------------------- | ------------------------------------------------------------------------------- |
-| **Dedicated View**    | Click the Portyard icon in the Activity Bar to open the active ports panel      |
-| **Active Port Scan**  | Automatically scans active listening ports with their process names & PIDs      |
-| **System Filter**     | Toggle system and ephemeral ports on/off using the eye filter icon              |
-| **Process Control**   | Stop process running on a port with confirmation to free up socket port         |
-| **SSH Forwarding**    | Instantly generate safe, public forwarding tunnels via localhost.run            |
-| **One-Click Actions** | Copy URLs, open in browser, or unshare tunnels with single-click inline buttons |
+| FEATURE               | DESCRIPTION                                                                       |
+| --------------------- | --------------------------------------------------------------------------------- |
+| **Dedicated View**    | Click the Portyard icon in the Activity Bar to open the active ports panel        |
+| **Active Port Scan**  | Automatically scans active listening ports with their process names & PIDs        |
+| **Smart Polling**     | Visibility-aware background scanning automatically pauses when panel is hidden    |
+| **Tech Brand Icons**  | Category-based Codicons (`database`, `server`, `globe`, `package`) for tech stack |
+| **System Filter**     | Toggle system and ephemeral ports on/off using the eye filter icon                |
+| **Process Control**   | Stop process running on a port with confirmation to free up socket port           |
+| **SSH Forwarding**    | Instantly generate safe, public forwarding tunnels via localhost.run              |
+| **One-Click Actions** | Copy URLs, open in browser, or unshare tunnels with single-click inline buttons   |
 
 ---
 

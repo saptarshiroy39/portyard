@@ -5,6 +5,23 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-29
+
+### Added
+
+- **Differentiated Brand Codicons:** Updated tree items to render distinct VS Code Codicons based on technology category (`database` for databases, `server` for runtimes, `globe` for web apps, and `package` for containers).
+
+### Changed
+
+- **Visibility-Aware Polling:** Intelligent scanning engine that automatically pauses background shell execution when the Portyard sidebar panel is collapsed or hidden, saving CPU and battery.
+- **Process Mapping Cache:** Implemented a 10-second process caching layer to eliminate redundant process table lookups during port scans.
+- **Clean Tooltip Layout:** Streamlined tooltip formatting for a compact, readable presentation.
+
+### Fixed
+
+- **SSH Process Tree Termination:** Enhanced tunnel termination using recursive process tree killing (`taskkill /F /T` on Windows) to guarantee that all background SSH subprocesses and sockets are completely destroyed upon stopping forwarding.
+- **SSH Output Stream Parsing:** Attached tunnel URL extraction listeners to both `stdout` and `stderr` streams, preventing URL detection timeouts.
+
 ## [1.1.1] - 2026-06-25
 
 ### Changed
