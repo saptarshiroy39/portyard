@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { discoverActivePorts, ActivePort, isSystemPort } from "./portDiscovery";
-import { getBrandColor } from "./brandUtils";
+import { getBrandColor, getBrandIcon } from "./brandUtils";
 
 export class PortTreeItem extends vscode.TreeItem {
   constructor(
@@ -32,25 +32,25 @@ export class PortTreeItem extends vscode.TreeItem {
   private getTooltipText(): vscode.MarkdownString {
     const md = new vscode.MarkdownString();
     md.supportThemeIcons = true;
-    md.appendMarkdown(`$(radio-tower) Port: ${this.portInfo.port}\n\n`);
-    md.appendMarkdown(`$(terminal) Process: ${this.portInfo.processName}\n\n`);
-    md.appendMarkdown(`$(symbol-numeric) PID: ${this.portInfo.pid}\n\n`);
-    md.appendMarkdown(`$(globe) Protocol: ${this.portInfo.protocol}\n\n`);
+    md.appendMarkdown(`$(radio-tower) Port: ${this.portInfo.port}  \n`);
+    md.appendMarkdown(`$(terminal) Process: ${this.portInfo.processName}  \n`);
+    md.appendMarkdown(`$(symbol-numeric) PID: ${this.portInfo.pid}  \n`);
+    md.appendMarkdown(`$(globe) Protocol: ${this.portInfo.protocol}`);
     if (this.portInfo.brand) {
       md.appendMarkdown(
-        `$(code) Technology: ${this.portInfo.brand.toUpperCase()}\n\n`,
+        `  \n$(code) Technology: ${this.portInfo.brand.toUpperCase()}`,
       );
     }
     if (this.tunnelInfo) {
       md.appendMarkdown(
-        `$(link) Public URL: [${this.tunnelInfo.url}](${this.tunnelInfo.url})\n\n`,
+        `  \n$(link) Public URL: [${this.tunnelInfo.url}](${this.tunnelInfo.url})`,
       );
     }
     return md;
   }
 
   private getIcon(): vscode.ThemeIcon {
-    const iconName = this.tunnelInfo ? "broadcast" : "plug";
+    const iconName = getBrandIcon(this.portInfo.brand, !!this.tunnelInfo);
     return new vscode.ThemeIcon(
       iconName,
       new vscode.ThemeColor(getBrandColor(this.portInfo.brand)),

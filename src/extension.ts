@@ -18,15 +18,45 @@ export function activate(context: vscode.ExtensionContext) {
     false,
   );
 
-  vscode.window.registerTreeDataProvider("portyard-ports-view", portsProvider);
+  const treeView = vscode.window.createTreeView("portyard-ports-view", {
+    treeDataProvider: portsProvider,
+  });
 
-  const autoRefreshInterval = setInterval(() => {
-    portsProvider.refresh();
-  }, 5000);
+  let autoRefreshInterval: NodeJS.Timeout | undefined;
+
+  const startPolling = () => {
+    if (!autoRefreshInterval) {
+      portsProvider.refresh();
+      autoRefreshInterval = setInterval(() => {
+        portsProvider.refresh();
+      }, 5000);
+    }
+  };
+
+  const stopPolling = () => {
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+      autoRefreshInterval = undefined;
+    }
+  };
+
+  if (treeView.visible) {
+    startPolling();
+  }
+
+  const visibilitySubscription = treeView.onDidChangeVisibility((e) => {
+    if (e.visible) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  });
 
   context.subscriptions.push(
+    treeView,
+    visibilitySubscription,
     new vscode.Disposable(() => {
-      clearInterval(autoRefreshInterval);
+      stopPolling();
     }),
   );
 
@@ -225,7 +255,13 @@ export function activate(context: vscode.ExtensionContext) {
 function closeActiveTunnel(port: number, portsProvider?: ActivePortsProvider) {
   const tunnel = activeTunnels.get(port);
   if (tunnel) {
-    tunnel.process.kill();
+    if (tunnel.process.pid) {
+      killProcess(tunnel.process.pid).catch(() => {
+        tunnel.process.kill("SIGKILL");
+      });
+    } else {
+      tunnel.process.kill();
+    }
     activeTunnels.delete(port);
     if (portsProvider) {
       portsProvider.refresh();
@@ -264,8 +300,7 @@ function createSshTunnel(
 
         let urlFound = false;
 
-        proc.stdout?.setEncoding("utf8");
-        proc.stdout?.on("data", (data: string) => {
+        const handleData = (data: string) => {
           if (urlFound || isCancelled) return;
 
           const match =
@@ -300,7 +335,12 @@ function createSshTunnel(
 
             resolve();
           }
-        });
+        };
+
+        proc.stdout?.setEncoding("utf8");
+        proc.stdout?.on("data", handleData);
+        proc.stderr?.setEncoding("utf8");
+        proc.stderr?.on("data", handleData);
 
         proc.on("close", () => {
           activeTunnels.delete(port);
@@ -324,10 +364,9 @@ function createSshTunnel(
 }
 
 export function deactivate() {
-  for (const tunnel of activeTunnels.values()) {
-    tunnel.process.kill();
+  for (const port of Array.from(activeTunnels.keys())) {
+    closeActiveTunnel(port);
   }
-  activeTunnels.clear();
 }
 
 class PortFileDecorationProvider implements vscode.FileDecorationProvider {

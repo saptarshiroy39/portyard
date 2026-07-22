@@ -30,3 +30,42 @@ export function getBrandColor(brand: string | undefined): string {
       return "charts.foreground";
   }
 }
+
+export function getBrandIcon(
+  brand: string | undefined,
+  isShared: boolean,
+): string {
+  if (isShared) {
+    return "broadcast";
+  }
+  switch (brand) {
+    case "postgres":
+    case "mongodb":
+    case "mysql":
+    case "redis":
+      return "database";
+    case "vite":
+    case "react":
+    case "angular":
+    case "vue":
+    case "http":
+    case "https":
+      return "globe";
+    case "docker":
+      return "package";
+    case "node":
+    case "python":
+    case "django":
+    case "flask":
+    case "fastapi":
+    case "uvicorn":
+    case "ruby":
+    case "sinatra":
+    case "php":
+    case "go":
+    case "java":
+      return "server";
+    default:
+      return "plug";
+  }
+}

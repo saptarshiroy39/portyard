@@ -9,6 +9,16 @@ export interface ActivePort {
   brand?: string;
 }
 
+interface ProcessInfo {
+  name: string;
+}
+
+let cachedWindowsProcessMap: Map<number, ProcessInfo> | null = null;
+let cachedUnixProcessMap: Map<number, ProcessInfo> | null = null;
+let lastWindowsCacheTime = 0;
+let lastUnixCacheTime = 0;
+const CACHE_TTL_MS = 10000;
+
 const BRAND_PORTS: Record<number, string> = {
   5173: "vite",
   4200: "angular",
@@ -46,26 +56,60 @@ function getBrandForPort(
   return undefined;
 }
 
-function getWindowsProcessMap(): Promise<Map<number, string>> {
+function getWindowsProcessMap(): Promise<Map<number, ProcessInfo>> {
+  const now = Date.now();
+  if (cachedWindowsProcessMap && now - lastWindowsCacheTime < CACHE_TTL_MS) {
+    return Promise.resolve(cachedWindowsProcessMap);
+  }
+
   return new Promise((resolve) => {
-    const processMap = new Map<number, string>();
-    exec("tasklist /FO CSV /NH", (error, stdout) => {
-      if (error || !stdout) {
-        console.warn("[Portyard] tasklist failed:", error?.message);
-        resolve(processMap);
-        return;
-      }
-      for (const line of stdout.split("\n")) {
-        const parts = line.split('","');
-        if (parts.length >= 2) {
-          const name = parts[0].replace(/"/g, "").trim();
-          const pidStr = parts[1].replace(/"/g, "").trim();
-          const pid = parseInt(pidStr, 10);
-          if (!isNaN(pid)) {
-            processMap.set(pid, name);
+    const processMap = new Map<number, ProcessInfo>();
+    exec("tasklist /FO CSV /NH", (taskError, taskStdout) => {
+      if (!taskError && taskStdout) {
+        for (const line of taskStdout.split("\n")) {
+          const parts = line.split('","');
+          if (parts.length >= 2) {
+            const name = parts[0].replace(/"/g, "").trim();
+            const pidStr = parts[1].replace(/"/g, "").trim();
+            const pid = parseInt(pidStr, 10);
+            if (!isNaN(pid)) {
+              processMap.set(pid, { name });
+            }
           }
         }
       }
+      cachedWindowsProcessMap = processMap;
+      lastWindowsCacheTime = Date.now();
+      resolve(processMap);
+    });
+  });
+}
+
+function getUnixProcessMap(): Promise<Map<number, ProcessInfo>> {
+  const now = Date.now();
+  if (cachedUnixProcessMap && now - lastUnixCacheTime < CACHE_TTL_MS) {
+    return Promise.resolve(cachedUnixProcessMap);
+  }
+
+  return new Promise((resolve) => {
+    const processMap = new Map<number, ProcessInfo>();
+    exec("ps -eo pid,comm", (error, stdout) => {
+      if (!error && stdout) {
+        const lines = stdout.split("\n");
+        for (let i = 1; i < lines.length; i++) {
+          const trimmed = lines[i].trim();
+          if (!trimmed) continue;
+          const match = trimmed.match(/^(\d+)\s+(.+)$/);
+          if (match) {
+            const pid = parseInt(match[1], 10);
+            const name = match[2];
+            const shortName = name.substring(name.lastIndexOf("/") + 1);
+            processMap.set(pid, { name: shortName });
+          }
+        }
+      }
+      cachedUnixProcessMap = processMap;
+      lastUnixCacheTime = Date.now();
       resolve(processMap);
     });
   });
@@ -101,7 +145,8 @@ async function discoverWindows(): Promise<ActivePort[]> {
           const port = parseInt(portStr, 10);
           if (isNaN(port) || port === 0) continue;
 
-          const processName = processMap.get(pid) || "Unknown";
+          const procInfo = processMap.get(pid);
+          const processName = procInfo?.name || "Unknown";
           const key = `${protocol}-${port}`;
 
           if (!portsMap.has(key)) {
@@ -120,7 +165,8 @@ async function discoverWindows(): Promise<ActivePort[]> {
   });
 }
 
-function discoverUnix(): Promise<ActivePort[]> {
+async function discoverUnix(): Promise<ActivePort[]> {
+  const processMap = await getUnixProcessMap();
   return new Promise((resolve) => {
     exec("lsof -iTCP -sTCP:LISTEN -P -n", (error, stdout) => {
       if (error || !stdout) {
@@ -135,7 +181,6 @@ function discoverUnix(): Promise<ActivePort[]> {
 
         const tokens = trimmed.split(/\s+/);
         if (tokens.length >= 9) {
-          const processName = tokens[0];
           const pid = parseInt(tokens[1], 10);
           const name = tokens[8];
 
@@ -148,7 +193,10 @@ function discoverUnix(): Promise<ActivePort[]> {
           const port = parseInt(portStr, 10);
           if (isNaN(port) || port === 0) continue;
 
+          const procInfo = processMap.get(pid);
+          const processName = procInfo?.name || tokens[0];
           const key = `TCP-${port}`;
+
           if (!portsMap.has(key)) {
             portsMap.set(key, {
               port,
