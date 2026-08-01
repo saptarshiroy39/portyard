@@ -339,8 +339,6 @@ function createSshTunnel(
 
         proc.stdout?.setEncoding("utf8");
         proc.stdout?.on("data", handleData);
-        proc.stderr?.setEncoding("utf8");
-        proc.stderr?.on("data", handleData);
 
         proc.on("close", () => {
           activeTunnels.delete(port);
