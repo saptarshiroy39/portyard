@@ -5,6 +5,12 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-07-10
+
+### Fixed
+
+- **IPv6 Loopback Forwarding:** Changed target loopback address in SSH forwarding commands from `127.0.0.1` to `localhost`. This resolves the `ERR_EMPTY_RESPONSE` error when forwarding development servers (like modern Vite or Next.js) that listen exclusively on the IPv6 loopback interface (`[::1]`).
+
 ## [1.2.1] - 2026-07-05
 
 ### Fixed
