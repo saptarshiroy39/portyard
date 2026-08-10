@@ -294,7 +294,7 @@ function createSshTunnel(
           "-o",
           "StrictHostKeyChecking=accept-new",
           "-R",
-          `80:127.0.0.1:${port}`,
+          `80:localhost:${port}`,
           "nokey@localhost.run",
         ]);
 
