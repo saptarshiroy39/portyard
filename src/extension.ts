@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import { ActivePortsProvider, PortTreeItem } from "./portTreeProvider";
-import { killProcess } from "./portDiscovery";
 import { getBrandColor } from "./brandUtils";
-import { spawn, ChildProcess } from "child_process";
-
-const activeTunnels: Map<number, { process: ChildProcess; url: string }> =
-  new Map();
+import { killProcess } from "./portDiscovery";
+import { ActivePortsProvider, PortTreeItem } from "./portTreeProvider";
+import {
+  activeTunnels,
+  closeActiveTunnel,
+  createSshTunnel,
+} from "./tunnelManager";
 
 export function activate(context: vscode.ExtensionContext) {
   const portsProvider = new ActivePortsProvider((port) =>
@@ -193,7 +194,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
         return;
       }
-      createSshTunnel(port, portsProvider);
+      createSshTunnel(item.portInfo, portsProvider);
     },
   );
 
@@ -252,114 +253,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-function closeActiveTunnel(port: number, portsProvider?: ActivePortsProvider) {
-  const tunnel = activeTunnels.get(port);
-  if (tunnel) {
-    if (tunnel.process.pid) {
-      killProcess(tunnel.process.pid).catch(() => {
-        tunnel.process.kill("SIGKILL");
-      });
-    } else {
-      tunnel.process.kill();
-    }
-    activeTunnels.delete(port);
-    if (portsProvider) {
-      portsProvider.refresh();
-    }
-  }
-}
 
-function createSshTunnel(
-  port: number,
-  portsProvider: ActivePortsProvider,
-): Thenable<void> {
-  return vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `Generating instant SSH tunnel for port ${port}...`,
-      cancellable: true,
-    },
-    (_progress, token) => {
-      return new Promise<void>((resolve) => {
-        let isCancelled = false;
-        token.onCancellationRequested(() => {
-          isCancelled = true;
-          closeActiveTunnel(port, portsProvider);
-          resolve();
-        });
-
-        closeActiveTunnel(port, portsProvider);
-
-        const proc = spawn("ssh", [
-          "-o",
-          "StrictHostKeyChecking=accept-new",
-          "-R",
-          `80:localhost:${port}`,
-          "nokey@localhost.run",
-        ]);
-
-        let urlFound = false;
-
-        const handleData = (data: string) => {
-          if (urlFound || isCancelled) return;
-
-          const match =
-            data.match(/(https:\/\/[a-zA-Z0-9-.]+\.lhr\.life)/i) ||
-            data.match(/(https:\/\/[a-zA-Z0-9-.]+\.localhost\.run)/i) ||
-            data.match(/(https:\/\/[^\s]+)/);
-
-          if (match && match[1]) {
-            urlFound = true;
-            const url = match[1];
-
-            activeTunnels.set(port, { process: proc, url });
-            vscode.env.clipboard.writeText(url);
-            portsProvider.refresh();
-
-            vscode.window
-              .showInformationMessage(
-                `SSH Tunnel Active! Link copied: ${url}`,
-                "Open in Browser",
-                "Close Tunnel",
-              )
-              .then((choice) => {
-                if (choice === "Open in Browser") {
-                  vscode.env.openExternal(vscode.Uri.parse(url));
-                } else if (choice === "Close Tunnel") {
-                  closeActiveTunnel(port, portsProvider);
-                  vscode.window.showInformationMessage(
-                    `SSH tunnel for port ${port} terminated.`,
-                  );
-                }
-              });
-
-            resolve();
-          }
-        };
-
-        proc.stdout?.setEncoding("utf8");
-        proc.stdout?.on("data", handleData);
-
-        proc.on("close", () => {
-          activeTunnels.delete(port);
-          portsProvider.refresh();
-          resolve();
-        });
-
-        proc.on("error", (err) => {
-          activeTunnels.delete(port);
-          portsProvider.refresh();
-          if (!urlFound && !isCancelled) {
-            vscode.window.showErrorMessage(
-              `SSH Tunnel failed to launch: ${err.message}`,
-            );
-            resolve();
-          }
-        });
-      });
-    },
-  );
-}
 
 export function deactivate() {
   for (const port of Array.from(activeTunnels.keys())) {

@@ -5,6 +5,23 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-07-17
+
+### Added
+
+- **Development Build Scripts:** Added helper shell scripts `compile.sh` and `package.sh` under `scripts/` to simplify compiling and packaging the extension.
+- **Modular Tunnel Manager:** Created a dedicated `src/tunnelManager.ts` file to isolate SSH tunnel execution logic, state, and target host resolution from VS Code lifecycle events.
+
+### Changed
+
+- **Code Quality Improvements:** Sorted and grouped imports alphabetically across all source files for improved readability.
+
+### Fixed
+
+- **IPv4 Loopback Standardization:** Standardized the target host in SSH forwarding commands to exclusively use the highly optimized IPv4 loopback (`127.0.0.1`) for all loopback and wildcard bindings (including IPv6 `[::1]`, `[::]`, and `::`), while keeping custom non-loopback IPv4 addresses (like `192.168.x.x`). This guarantees maximum loopback forwarding performance and avoids any network routing delays or firewall blocks related to IPv6 on local devices.
+- **SSH Connection Speedup:** Added the `-4` flag to the SSH command, forcing IPv4 name resolution. This completely bypasses slow IPv6 handshake attempts and timeouts to `localhost.run` servers, making tunnel generation and loading instantaneous.
+- **Robust SSH Output Capturing:** Attached the tunnel URL parser to both `stdout` and `stderr` streams, and refined URL matching logic to filter out the `https://admin.localhost.run` welcome link, ensuring only valid public tunnel URLs (`*.lhr.life` / `*.localhost.run`) are captured.
+
 ## [1.2.2] - 2026-07-10
 
 ### Fixed
