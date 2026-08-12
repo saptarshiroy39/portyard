@@ -2,7 +2,7 @@
   "name": "portyard",
   "displayName": "Portyard",
   "description": "Cross-platform local port discovery and process management.",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "publisher": "saptarshiroy39",
   "license": "MIT",
   "homepage": "https://hirishi.in",
@@ -149,7 +149,8 @@
     "watch": "tsc -watch -p ./",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "package": "bash scripts/package.sh"
   },
   "devDependencies": {
     "@types/node": "^18.17.0",

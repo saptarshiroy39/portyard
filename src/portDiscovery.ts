@@ -7,6 +7,7 @@ export interface ActivePort {
   processName: string;
   protocol: "TCP" | "UDP";
   brand?: string;
+  ip?: string;
 }
 
 interface ProcessInfo {
@@ -145,6 +146,7 @@ async function discoverWindows(): Promise<ActivePort[]> {
           const port = parseInt(portStr, 10);
           if (isNaN(port) || port === 0) continue;
 
+          const rawIp = localAddress.substring(0, lastColonIndex);
           const procInfo = processMap.get(pid);
           const processName = procInfo?.name || "Unknown";
           const key = `${protocol}-${port}`;
@@ -156,6 +158,7 @@ async function discoverWindows(): Promise<ActivePort[]> {
               processName,
               protocol,
               brand: getBrandForPort(port, processName),
+              ip: rawIp,
             });
           }
         }
@@ -193,6 +196,7 @@ async function discoverUnix(): Promise<ActivePort[]> {
           const port = parseInt(portStr, 10);
           if (isNaN(port) || port === 0) continue;
 
+          const rawIp = name.substring(0, lastColonIndex);
           const procInfo = processMap.get(pid);
           const processName = procInfo?.name || tokens[0];
           const key = `TCP-${port}`;
@@ -204,6 +208,7 @@ async function discoverUnix(): Promise<ActivePort[]> {
               processName,
               protocol: "TCP",
               brand: getBrandForPort(port, processName),
+              ip: rawIp,
             });
           }
         }
