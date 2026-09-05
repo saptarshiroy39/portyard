@@ -9,62 +9,47 @@
 </p>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=saptarshiroy39.portyard"><b>🔗 <code>VS Code Marketplace</code></b></a>
-  &nbsp;|&nbsp;
-  <a href="https://open-vsx.org/extension/saptarshiroy39/portyard"><b>🔗 <code>Open VSX Registry</code></b></a>
-  &nbsp;|&nbsp;
-  🆔 <code>saptarshiroy39.portyard</code>
+  <a href="https://github.com/saptarshiroy39/portyard/releases">
+    <img alt="GitHub Release" src="https://img.shields.io/github/v/release/saptarshiroy39/portyard?color=emerald">
+  </a>
+  <a href="https://open-vsx.org/extension/saptarshiroy39/portyard">
+    <img alt="Open VSX Downloads" src="https://img.shields.io/open-vsx/dt/saptarshiroy39/portyard?color=goldenrod">
+  </a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=saptarshiroy39.portyard">
+    <img alt="Visual Studio Marketplace" src="https://img.shields.io/badge/get%20it%20on-Visual%20Studio%20Marketplace-royalblue">
+  </a>
+  <a href="https://open-vsx.org/extension/saptarshiroy39/portyard">
+    <img alt="Open VSX Registry" src="https://img.shields.io/badge/get%20it%20on-Open%20VSX%20Registry-darkmagenta">
+  </a>
+  <a href="https://github.com/saptarshiroy39/portyard/blob/main/LICENSE">
+    <img alt="GitHub License" src="https://img.shields.io/github/license/saptarshiroy39/portyard?color=crimson">
+  </a>
 </p>
 
 ---
 
-## 🎯 _Features_
+## ✳️ _Features_
 
-| FEATURE               | DESCRIPTION                                                                       |
-| --------------------- | --------------------------------------------------------------------------------- |
-| **Dedicated View**    | Click the Portyard icon in the Activity Bar to open the active ports panel        |
-| **Active Port Scan**  | Automatically scans active listening ports with their process names & PIDs        |
-| **Smart Polling**     | Visibility-aware background scanning automatically pauses when panel is hidden    |
-| **Tech Brand Icons**  | Category-based Codicons (`database`, `server`, `globe`, `package`) for tech stack |
-| **System Filter**     | Toggle system and ephemeral ports on/off using the eye filter icon                |
-| **Process Control**   | Stop process running on a port with confirmation to free up socket port           |
-| **SSH Forwarding**    | Instantly generate safe, public forwarding tunnels via localhost.run              |
-| **One-Click Actions** | Copy URLs, open in browser, or unshare tunnels with single-click inline buttons   |
-
----
-
-## 🏗️ _Architecture_
-
-| #   | COMPONENT          | DESCRIPTION                                                     | STACK            |
-| --- | ------------------ | --------------------------------------------------------------- | ---------------- |
-| 1️⃣  | **Extension Host** | Command registrations, SSH tunnel manager, state, context setup | **_TypeScript_** |
-| 2️⃣  | **Ports Provider** | Sidebar tree view data rendering, brand matching, tooltips      | **_TypeScript_** |
-| 3️⃣  | **Port Discovery** | Platform-specific shell tools (`netstat`, `lsof`) runner        | **_TypeScript_** |
+| FEATURE | DESCRIPTION |
+| :---: | :---: |
+| **Dedicated View** | Click the Portyard icon in the Activity Bar to open the active ports panel |
+| **Active Port Scan** | Automatically scans active listening ports with their process names & PIDs |
+| **Smart Polling** | Visibility-aware background scanning automatically pauses when panel is hidden |
+| **Tech Brand Icons** | Category-based Codicons (`database`, `server`, `globe`, `package`) for tech stack |
+| **System Filter** | Toggle system and ephemeral ports on/off using the eye filter icon |
+| **Process Control** | Stop process running on a port with confirmation to free up socket port |
+| **SSH Forwarding** | Instantly generate safe, public forwarding tunnels via localhost.run |
+| **One-Click Actions** | Copy URLs, open in browser, or unshare tunnels with single-click inline buttons |
 
 ---
 
-## 📁 _Project Structure_
+## ✳️ _Architecture_
 
-```
-Portyard/
-├── .vscode/
-│   ├── launch.json         # Extension debug configuration
-│   └── tasks.json          # Development compilation tasks
-├── .vscodeignore           # Files excluded from published package
-├── images/
-│   ├── logo.png            # Extension logo/branding
-│   └── icon.svg            # Activity Bar icon (sidebar)
-├── src/
-│   ├── brandUtils.ts       # Visual theme color utilities for technology brands
-│   ├── extension.ts        # Main extension entry point & command registration
-│   ├── portDiscovery.ts    # Cross-platform port scanning & process mapper
-│   └── portTreeProvider.ts # Sidebar ports list Tree View provider
-├── eslint.config.js        # ESLint environment configuration
-├── LICENSE                 # MIT License details
-├── package.json            # Extension manifest
-├── tsconfig.json           # TypeScript configuration
-└── README.md
-```
+| # | COMPONENT | DESCRIPTION | STACK |
+| :---: | :---: | :---: | :---: |
+| 1️⃣ | **Extension Host** | Command registrations, SSH tunnel manager, state, context setup | **_TypeScript_** |
+| 2️⃣ | **Ports Provider** | Sidebar tree view data rendering, brand matching, tooltips | **_TypeScript_** |
+| 3️⃣ | **Port Discovery** | Platform-specific shell tools (`netstat`, `lsof`) runner | **_TypeScript_** |
 
 ---
 
