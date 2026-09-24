@@ -5,6 +5,23 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-14
+
+### Added
+
+- **Expanded Technology Brand Detection:** Added process name detection for frameworks and databases including `django`, `fastapi`, `flask`, `uvicorn`, `react`, `vue`, `angular`, `deno`, `bun`, `postgres`, `mongodb`, `mysql`, `redis`, `php`, and `ruby`, activating accurate Codicon and theme color mappings.
+
+### Changed
+
+- **Compact Process Identifier:** Formatted tree item descriptions from `(PID: <number>)` to compact `(#<number>)` (e.g. `node.exe (#13816)`).
+- **Streamlined Architecture:** Cleaned up redundant decoration providers and dead code paths, utilizing native `ThemeIcon` coloring for faster sidebar tree rendering.
+
+### Fixed
+
+- **SSH Tunnel Persistence on Dev Server Reloads:** Added SSH keepalives (`ServerAliveInterval=15`, `ServerAliveCountMax=3`, `TCPKeepAlive=yes`) and `ExitOnForwardFailure=no` to keep public tunnels active across web application hot-reloads and idle periods.
+- **SSH Stream Chunk Buffering:** Implemented bounded output chunk accumulation in `tunnelManager.ts` to prevent URL detection failures caused by split TCP stream chunks.
+- **Loopback Target Resolution:** Refined loopback resolution to use `localhost` by default, ensuring forwarded connections route seamlessly across both IPv4 and IPv6 loopback bindings.
+
 ## [1.2.3] - 2026-07-17
 
 ### Added

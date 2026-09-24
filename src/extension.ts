@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { getBrandColor } from "./brandUtils";
 import { killProcess } from "./portDiscovery";
 import { ActivePortsProvider, PortTreeItem } from "./portTreeProvider";
 import {
@@ -149,51 +148,6 @@ export function activate(context: vscode.ExtensionContext) {
     "portyard.forwardPort",
     async (item: PortTreeItem) => {
       if (!item || !item.portInfo) return;
-
-      const port = item.portInfo.port;
-      const activeTunnel = activeTunnels.get(port);
-
-      if (activeTunnel) {
-        const selection = await vscode.window.showQuickPick(
-          [
-            {
-              label: "$(copy) Copy Public URL to Clipboard",
-              description: activeTunnel.url,
-              action: "copy",
-            },
-            {
-              label: "$(globe) Open Public URL in Browser",
-              description: activeTunnel.url,
-              action: "open",
-            },
-            {
-              label: "$(circle-slash) Terminate SSH Tunnel",
-              description: "Stops the running localhost.run forwarding tunnel.",
-              action: "stop",
-            },
-          ],
-          {
-            placeHolder: `SSH Tunnel for port ${port} is active`,
-          },
-        );
-
-        if (!selection) return;
-
-        if (selection.action === "copy") {
-          vscode.env.clipboard.writeText(activeTunnel.url);
-          vscode.window.showInformationMessage(
-            `Copied tunnel URL to clipboard: ${activeTunnel.url}`,
-          );
-        } else if (selection.action === "open") {
-          vscode.env.openExternal(vscode.Uri.parse(activeTunnel.url));
-        } else if (selection.action === "stop") {
-          closeActiveTunnel(port, portsProvider);
-          vscode.window.showInformationMessage(
-            `SSH tunnel for port ${port} has been terminated.`,
-          );
-        }
-        return;
-      }
       createSshTunnel(item.portInfo, portsProvider);
     },
   );
@@ -247,31 +201,11 @@ export function activate(context: vscode.ExtensionContext) {
     unshareCommand,
     copySharedUrlCommand,
     openSharedUrlCommand,
-    vscode.window.registerFileDecorationProvider(
-      new PortFileDecorationProvider(),
-    ),
   );
 }
-
-
 
 export function deactivate() {
   for (const port of Array.from(activeTunnels.keys())) {
     closeActiveTunnel(port);
-  }
-}
-
-class PortFileDecorationProvider implements vscode.FileDecorationProvider {
-  provideFileDecoration(
-    uri: vscode.Uri,
-  ): vscode.ProviderResult<vscode.FileDecoration> {
-    if (uri.scheme !== "portyard-port") {
-      return undefined;
-    }
-    const match = uri.query.match(/brand=([^&]+)/);
-    const brand = match ? match[1] : undefined;
-    return {
-      color: new vscode.ThemeColor(getBrandColor(brand)),
-    };
   }
 }

@@ -9,8 +9,7 @@ export class PortTreeItem extends vscode.TreeItem {
   ) {
     super(`:${portInfo.port}`, vscode.TreeItemCollapsibleState.None);
 
-    const italicName = toUnicodeItalic(portInfo.processName);
-    this.description = `${italicName} (PID: ${portInfo.pid})`;
+    this.description = `${portInfo.processName} (#${portInfo.pid})`;
 
     if (tunnelInfo) {
       this.contextValue = "sharedPort";
@@ -20,13 +19,6 @@ export class PortTreeItem extends vscode.TreeItem {
 
     this.tooltip = this.getTooltipText();
     this.iconPath = this.getIcon();
-
-    const brandQuery = portInfo.brand
-      ? `brand=${portInfo.brand}`
-      : "brand=generic";
-    this.resourceUri = vscode.Uri.parse(
-      `portyard-port:${portInfo.port}?${brandQuery}`,
-    );
   }
 
   private getTooltipText(): vscode.MarkdownString {
@@ -104,20 +96,4 @@ export class ActivePortsProvider implements vscode.TreeDataProvider<PortTreeItem
       return [];
     }
   }
-}
-
-function toUnicodeItalic(str: string): string {
-  return str
-    .split("")
-    .map((char) => {
-      const code = char.charCodeAt(0);
-      if (code >= 97 && code <= 122) {
-        return String.fromCodePoint(0x1d622 + (code - 97));
-      }
-      if (code >= 65 && code <= 90) {
-        return String.fromCodePoint(0x1d608 + (code - 65));
-      }
-      return char;
-    })
-    .join("");
 }

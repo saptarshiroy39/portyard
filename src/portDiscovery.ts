@@ -39,21 +39,34 @@ function getBrandForPort(
     return BRAND_PORTS[port];
   }
   const lowerProcess = processName.toLowerCase();
-  if (lowerProcess.includes("node") || lowerProcess.includes("vite"))
-    return "node";
-  if (
-    lowerProcess.includes("python") ||
-    lowerProcess.includes("django") ||
-    lowerProcess.includes("fastapi") ||
-    lowerProcess.includes("uvicorn")
-  )
-    return "python";
-  if (lowerProcess.includes("docker")) return "docker";
-  // Exact match only — 'includes("go")' would false-positive on cargo, ergo, django, etc.
+  // Web & Frontend / JS Runtimes
+  if (lowerProcess.includes("vite")) return "vite";
+  if (lowerProcess.includes("react")) return "react";
+  if (lowerProcess.includes("vue")) return "vue";
+  if (lowerProcess.includes("angular")) return "angular";
+  if (lowerProcess.includes("node") || lowerProcess.includes("deno") || lowerProcess.includes("bun")) return "node";
+
+  // Python Frameworks & Runtimes
+  if (lowerProcess.includes("django")) return "django";
+  if (lowerProcess.includes("fastapi")) return "fastapi";
+  if (lowerProcess.includes("uvicorn")) return "uvicorn";
+  if (lowerProcess.includes("flask")) return "flask";
+  if (lowerProcess.includes("python") || lowerProcess.includes("gunicorn")) return "python";
+
+  // Databases
+  if (lowerProcess.includes("postgres") || lowerProcess.includes("pg_")) return "postgres";
+  if (lowerProcess.includes("mongo")) return "mongodb";
+  if (lowerProcess.includes("mysql") || lowerProcess.includes("mariadb")) return "mysql";
+  if (lowerProcess.includes("redis")) return "redis";
+
+  // Containers & Languages
+  if (lowerProcess.includes("docker") || lowerProcess.includes("containerd")) return "docker";
   if (lowerProcess === "go" || lowerProcess === "go.exe") return "go";
   if (lowerProcess.includes("java")) return "java";
-  if (lowerProcess.includes("ruby") || lowerProcess.includes("rails"))
-    return "ruby";
+  if (lowerProcess.includes("php")) return "php";
+  if (lowerProcess.includes("sinatra")) return "sinatra";
+  if (lowerProcess.includes("ruby") || lowerProcess.includes("rails")) return "ruby";
+
   return undefined;
 }
 
