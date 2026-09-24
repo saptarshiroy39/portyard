@@ -13,14 +13,18 @@ export const activeTunnels: Map<number, Tunnel> = new Map();
 export function closeActiveTunnel(port: number, portsProvider?: ActivePortsProvider) {
   const tunnel = activeTunnels.get(port);
   if (tunnel) {
-    if (tunnel.process.pid) {
-      killProcess(tunnel.process.pid).catch(() => {
-        tunnel.process.kill("SIGKILL");
-      });
-    } else {
-      tunnel.process.kill();
-    }
     activeTunnels.delete(port);
+    try {
+      if (tunnel.process.pid) {
+        killProcess(tunnel.process.pid).catch(() => {
+          try {
+            tunnel.process.kill("SIGKILL");
+          } catch {}
+        });
+      } else {
+        tunnel.process.kill();
+      }
+    } catch {}
     if (portsProvider) {
       portsProvider.refresh();
     }
@@ -49,8 +53,8 @@ export function createSshTunnel(
 
         closeActiveTunnel(port, portsProvider);
 
-        const rawIp = (portInfo.ip || "127.0.0.1").trim();
-        let targetHost = "127.0.0.1";
+        const rawIp = (portInfo.ip || "localhost").trim();
+        let targetHost = "localhost";
 
         const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
         if (ipv4Regex.test(rawIp) && rawIp !== "127.0.0.1" && rawIp !== "0.0.0.0") {
@@ -60,6 +64,14 @@ export function createSshTunnel(
         const proc = spawn("ssh", [
           "-4",
           "-o",
+          "ServerAliveInterval=15",
+          "-o",
+          "ServerAliveCountMax=3",
+          "-o",
+          "TCPKeepAlive=yes",
+          "-o",
+          "ExitOnForwardFailure=no",
+          "-o",
           "StrictHostKeyChecking=accept-new",
           "-R",
           `80:${targetHost}:${port}`,
@@ -67,13 +79,19 @@ export function createSshTunnel(
         ]);
 
         let urlFound = false;
+        let outputBuffer = "";
 
-        const handleData = (data: string) => {
+        const handleData = (chunk: string) => {
           if (urlFound || isCancelled) return;
 
+          outputBuffer += chunk;
+          if (outputBuffer.length > 20000) {
+            outputBuffer = outputBuffer.slice(-10000);
+          }
+
           const match =
-            data.match(/(https:\/\/[a-zA-Z0-9-.]+\.lhr\.life)/i) ||
-            data.match(/(https:\/\/[a-zA-Z0-9-.]+\.localhost\.run)/i);
+            outputBuffer.match(/(https:\/\/[a-zA-Z0-9-.]+\.lhr\.life)/i) ||
+            outputBuffer.match(/(https:\/\/[a-zA-Z0-9-.]+\.localhost\.run)/i);
 
           if (match && match[1]) {
             const url = match[1];
@@ -112,9 +130,16 @@ export function createSshTunnel(
         proc.stderr?.setEncoding("utf8");
         proc.stderr?.on("data", handleData);
 
-        proc.on("close", () => {
+        proc.on("close", (code) => {
           activeTunnels.delete(port);
           portsProvider.refresh();
+          if (!urlFound && !isCancelled) {
+            const lastLine = outputBuffer.trim().split("\n").pop()?.trim();
+            const reason = lastLine ? `: ${lastLine}` : ` (exit code ${code})`;
+            vscode.window.showErrorMessage(
+              `SSH Tunnel for port ${port} failed to start${reason}`,
+            );
+          }
           resolve();
         });
 
@@ -123,10 +148,10 @@ export function createSshTunnel(
           portsProvider.refresh();
           if (!urlFound && !isCancelled) {
             vscode.window.showErrorMessage(
-              `SSH Tunnel failed to launch: ${err.message}`,
+              `SSH Tunnel failed to launch: ${err.message}. Ensure OpenSSH client is installed and in your PATH.`,
             );
-            resolve();
           }
+          resolve();
         });
       });
     },
