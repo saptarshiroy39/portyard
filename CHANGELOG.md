@@ -5,6 +5,18 @@ All notable changes to the **Portyard** (saptarshiroy39.portyard) extension will
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-10-03
+
+### Added
+
+- **Active Port Search & Filtering:** Added a search action (`$(search)`) in the view title header to filter active ports by port number, process name, PID, technology brand, protocol, or IP address.
+- **One-Click Clear Search:** Added a dynamic clear filter action (`$(close)`) that appears when a filter is active to quickly reset the view.
+- **Visual Search Feedback:** Integrated live query matching count in the sidebar tree view description and friendly empty-state messaging when no matching ports are found.
+
+### Changed
+
+- **Streamlined Provider Logic:** Optimized tree item lookups with optional chaining and eliminated redundant state clearing.
+
 ## [1.3.0] - 2026-08-14
 
 ### Added

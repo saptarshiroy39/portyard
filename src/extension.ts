@@ -17,10 +17,39 @@ export function activate(context: vscode.ExtensionContext) {
     "portyard:showSystemPorts",
     false,
   );
+  vscode.commands.executeCommand(
+    "setContext",
+    "portyard:isFiltered",
+    false,
+  );
 
   const treeView = vscode.window.createTreeView("portyard-ports-view", {
     treeDataProvider: portsProvider,
   });
+
+  const updateSearchQuery = (query: string) => {
+    const trimmed = query.trim();
+    portsProvider.searchQuery = trimmed;
+    vscode.commands.executeCommand(
+      "setContext",
+      "portyard:isFiltered",
+      trimmed.length > 0,
+    );
+    portsProvider.refresh();
+  };
+
+  portsProvider.onDidUpdatePorts = (ports) => {
+    if (portsProvider.searchQuery) {
+      treeView.description = `"${portsProvider.searchQuery}" (${ports.length})`;
+      treeView.message =
+        ports.length === 0
+          ? `No active ports matching "${portsProvider.searchQuery}"`
+          : undefined;
+    } else {
+      treeView.description = undefined;
+      treeView.message = undefined;
+    }
+  };
 
   let autoRefreshInterval: NodeJS.Timeout | undefined;
 
@@ -58,6 +87,29 @@ export function activate(context: vscode.ExtensionContext) {
     new vscode.Disposable(() => {
       stopPolling();
     }),
+  );
+
+  const searchCommand = vscode.commands.registerCommand(
+    "portyard.searchPorts",
+    async () => {
+      const query = await vscode.window.showInputBox({
+        title: "Search Active Ports",
+        prompt:
+          "Filter by port number, process name, PID, or technology (leave empty to clear)",
+        placeHolder: "e.g. 10010, nvcontainer, 8204, vite",
+        value: portsProvider.searchQuery,
+      });
+      if (query !== undefined) {
+        updateSearchQuery(query);
+      }
+    },
+  );
+
+  const clearSearchCommand = vscode.commands.registerCommand(
+    "portyard.clearSearch",
+    () => {
+      updateSearchQuery("");
+    },
   );
 
   const refreshCommand = vscode.commands.registerCommand(
@@ -192,6 +244,8 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
+    searchCommand,
+    clearSearchCommand,
     refreshCommand,
     showSystemCommand,
     hideSystemCommand,
