@@ -2,7 +2,7 @@
   "name": "portyard",
   "displayName": "Portyard",
   "description": "Cross-platform local port discovery and process management.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "saptarshiroy39",
   "license": "MIT",
   "homepage": "https://hirishi.in",
@@ -40,6 +40,16 @@
       ]
     },
     "commands": [
+      {
+        "command": "portyard.searchPorts",
+        "title": "Search Ports",
+        "icon": "$(search)"
+      },
+      {
+        "command": "portyard.clearSearch",
+        "title": "Clear Search Filter",
+        "icon": "$(close)"
+      },
       {
         "command": "portyard.refreshPorts",
         "title": "Refresh Ports List",
@@ -89,19 +99,29 @@
     "menus": {
       "view/title": [
         {
-          "command": "portyard.refreshPorts",
+          "command": "portyard.searchPorts",
           "when": "view == portyard-ports-view",
           "group": "navigation@1"
         },
         {
+          "command": "portyard.clearSearch",
+          "when": "view == portyard-ports-view && portyard:isFiltered",
+          "group": "navigation@2"
+        },
+        {
+          "command": "portyard.refreshPorts",
+          "when": "view == portyard-ports-view",
+          "group": "navigation@3"
+        },
+        {
           "command": "portyard.showSystem",
           "when": "view == portyard-ports-view && !portyard:showSystemPorts",
-          "group": "navigation@2"
+          "group": "navigation@4"
         },
         {
           "command": "portyard.hideSystem",
           "when": "view == portyard-ports-view && portyard:showSystemPorts",
-          "group": "navigation@2"
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [

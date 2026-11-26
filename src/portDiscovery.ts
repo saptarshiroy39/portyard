@@ -283,3 +283,52 @@ export function isSystemPort(port: number, processName: string): boolean {
   if ([135, 137, 138, 139, 445].includes(port)) return true;
   return port >= 49152;
 }
+
+export function matchesSearch(
+  port: ActivePort,
+  query: string,
+  tunnelUrl?: string,
+): boolean {
+  if (!query) return true;
+  const rawTokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (rawTokens.length === 0) return true;
+
+  const tokens =
+    rawTokens.length > 1
+      ? rawTokens.filter(
+          (t) =>
+            t !== "port" &&
+            t !== "pid" &&
+            t !== "port:" &&
+            t !== "pid:",
+        )
+      : rawTokens;
+
+  const portStr = port.port.toString();
+  const pidStr = port.pid.toString();
+  const procName = port.processName.toLowerCase();
+  const protocol = port.protocol.toLowerCase();
+  const brand = (port.brand || "").toLowerCase();
+  const ip = (port.ip || "").toLowerCase();
+  const tunnel = (tunnelUrl || "").toLowerCase();
+
+  return tokens.every((token) => {
+    const cleanToken = token
+      .replace(/^(?:port|pid)[:=]/i, "")
+      .replace(/^[:#]/, "")
+      .trim();
+
+    const targetToMatch = cleanToken || token;
+
+    return (
+      portStr.includes(targetToMatch) ||
+      pidStr.includes(targetToMatch) ||
+      procName.includes(targetToMatch) ||
+      protocol.includes(token) ||
+      brand.includes(token) ||
+      ip.includes(token) ||
+      tunnel.includes(token)
+    );
+  });
+}
+

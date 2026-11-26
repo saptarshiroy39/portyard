@@ -1,5 +1,10 @@
 import * as vscode from "vscode";
-import { discoverActivePorts, ActivePort, isSystemPort } from "./portDiscovery";
+import {
+  ActivePort,
+  discoverActivePorts,
+  isSystemPort,
+  matchesSearch,
+} from "./portDiscovery";
 import { getBrandColor, getBrandIcon } from "./brandUtils";
 
 export class PortTreeItem extends vscode.TreeItem {
@@ -59,6 +64,8 @@ export class ActivePortsProvider implements vscode.TreeDataProvider<PortTreeItem
   > = this._onDidChangeTreeData.event;
 
   public showSystemPorts: boolean = false;
+  public searchQuery: string = "";
+  public onDidUpdatePorts?: (ports: ActivePort[]) => void;
 
   constructor(
     private readonly getTunnelInfo?: (
@@ -83,12 +90,21 @@ export class ActivePortsProvider implements vscode.TreeDataProvider<PortTreeItem
           (port) => !isSystemPort(port.port, port.processName),
         );
       }
-      return ports.map((port) => {
-        const tunnelInfo = this.getTunnelInfo
-          ? this.getTunnelInfo(port.port)
-          : undefined;
-        return new PortTreeItem(port, tunnelInfo);
-      });
+      if (this.searchQuery) {
+        ports = ports.filter((port) =>
+          matchesSearch(
+            port,
+            this.searchQuery,
+            this.getTunnelInfo?.(port.port)?.url,
+          ),
+        );
+      }
+      if (this.onDidUpdatePorts) {
+        this.onDidUpdatePorts(ports);
+      }
+      return ports.map(
+        (port) => new PortTreeItem(port, this.getTunnelInfo?.(port.port)),
+      );
     } catch (error: any) {
       vscode.window.showErrorMessage(
         `Failed to discover active ports: ${error.message}`,
@@ -97,3 +113,4 @@ export class ActivePortsProvider implements vscode.TreeDataProvider<PortTreeItem
     }
   }
 }
+
